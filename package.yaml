@@ -1,0 +1,81 @@
+name:                compiler
+version:             0.1.0.0
+github:              "githubuser/compiler"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2020 Author name here"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/compiler#readme>
+
+dependencies:
+  - criterion
+  - monad-par
+  - vector
+  - parallel
+  - criterion
+  - base >= 4.7 && < 5
+  - mtl
+  - transformers
+  - criterion
+  - containers
+  - deepseq
+  - monad-par
+  - random
+  - bytestring
+  - stm
+  - directory
+  - network
+  - async
+  - ghc
+  - wreq
+  - lens == 4.19.2
+  - aeson
+  - binary
+  - bytestring
+  - text
+  - utf8-string
+  - regex-posix
+  - filepath
+  - time
+  - exceptions
+  - ghc-prim
+  - attoparsec 
+  - parsec
+
+library:
+  source-dirs: src
+
+executables:
+  compiler-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O3
+    dependencies:
+    - compiler
+
+tests:
+  compiler-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - compiler

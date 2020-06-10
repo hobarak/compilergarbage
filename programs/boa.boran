@@ -1,0 +1,2 @@
+let x = 12 * 2  * (let a = 2 * 2 in (if a: a else: 1) * 3) in
+(2 + x) + (if 2: 2 else: 1)

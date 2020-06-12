@@ -62,23 +62,6 @@ normalize = snd . anf 0
 tag :: Expr a -> (Int, Expr (a, Int))
 tag e = mapAccumL (\acc a -> (acc + 1, (a, acc + 1))) 0 e
 
---tag :: Int -> Expr a -> (Int, Expr (a, Int))
---tag i (Var v a) = (i + 1, Var v (a, i + 1))
---tag i (Num n a) = (i + 1, Num n (a, i + 1))
---tag i (PrimOp x l r a) = (i2 + 1, PrimOp x vl vr (a, i2 + 1))
---  where
---    (i1, vl) = tag i l
---    (i2, vr) = tag i1 r
---tag i l@(Let v e1 e2 a) = (i2 + 1, Let v e11 e21 (a, i2 + 1))
---  where
---    (i1, e11) = tag i e1
---    (i2, e21) = tag i1 e2
---tag i l@(If e1 e2 e3 a) = (i3 + 1, If e11 e21 e31 (a, i3 + 1))
---  where
---    (i1, e11) = tag i e1
---    (i2, e21) = tag i1 e2
---    (i3, e31) = tag i2 e3
-
 tagger = snd . tag
 
 --
@@ -218,23 +201,23 @@ printer = do
 -- mov eax, 2
 -- imul  eax, 2
 -- mov [ebp - 4 * 2] , eax
--- mov eax, [ebp - 4 * 2] 
+-- mov eax, [ebp - 4 * 2]
 -- cmp eax, 0
 -- jne label_true_10
 -- mov eax, 1
 -- jmp label_end_10
 -- label_true_10:
--- mov eax, [ebp - 4 * 2] 
+-- mov eax, [ebp - 4 * 2]
 -- label_end_10:
 -- mov [ebp - 4 * 3] , eax
--- mov eax, [ebp - 4 * 3] 
+-- mov eax, [ebp - 4 * 3]
 -- imul  eax, 3
 -- mov [ebp - 4 * 2] , eax
--- mov eax, [ebp - 4 * 1] 
--- imul  eax, [ebp - 4 * 2] 
+-- mov eax, [ebp - 4 * 1]
+-- imul  eax, [ebp - 4 * 2]
 -- mov [ebp - 4 * 1] , eax
 -- mov eax, 2
--- add eax, [ebp - 4 * 1] 
+-- add eax, [ebp - 4 * 1]
 -- mov [ebp - 4 * 2] , eax
 -- mov eax, 2
 -- cmp eax, 0
@@ -245,8 +228,8 @@ printer = do
 -- mov eax, 2
 -- label_end_27:
 -- mov [ebp - 4 * 3] , eax
--- mov eax, [ebp - 4 * 2] 
--- add eax, [ebp - 4 * 3] 
+-- mov eax, [ebp - 4 * 2]
+-- add eax, [ebp - 4 * 3]
 -- <BLANKLINE>
 -- ret
 --

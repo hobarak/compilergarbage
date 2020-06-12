@@ -66,6 +66,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     - -O3
+    - -Wincomplete-patterns
     dependencies:
     - compiler
 

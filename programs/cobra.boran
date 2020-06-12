@@ -1,0 +1,16 @@
+def boran(a, b):
+  a + b
+
+def duygus(a, b):
+  a * b
+
+def fac(n): 
+  if n < 2: 1 else: n * (fac (n - 1))
+
+def fac2(acc, n):
+  if n < 2: acc else: fac2 (acc*n, n - 1)
+
+
+
+let x = 2 * 12  * (let a = 2 * 2 in (if (a < 3)  : a else: 1) * 3) in
+(2 + x) + boran(duygus(3, 4), 4 + 2) + fac(5) + fac2(1, 5)

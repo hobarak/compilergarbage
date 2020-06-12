@@ -107,7 +107,7 @@ parserTest =
   parse parseExpr "boa.boran" <$> readFile "programs/boa.boran"
 
 -- >>> x
--- Right (Let "x" (PrimOp Mul (PrimOp Mul (Num 12 ()) (Num 2 ()) ()) (Let "a" (PrimOp Mul (Num 2 ()) (Num 2 ()) ()) (PrimOp Mul (Var "a" ()) (Num 3 ()) ()) ()) ()) (PrimOp Add (PrimOp Add (Num 2 ()) (Var "x" ()) ()) (If (Num 0 ()) (Num 2 ()) (Num 1 ()) ()) ()) ())
+-- Right (Let "x" (PrimOp Mul (PrimOp Mul (Num 12 ()) (Num 2 ()) ()) (Let "a" (PrimOp Mul (Num 2 ()) (Num 2 ()) ()) (PrimOp Mul (If (Var "a" ()) (Var "a" ()) (Num 1 ()) ()) (Num 3 ()) ()) ()) ()) (PrimOp Add (PrimOp Add (Num 2 ()) (Var "x" ()) ()) (If (Num 2 ()) (Num 2 ()) (Num 1 ()) ()) ()) ())
 --
 
 x = (fmap . fmap . fmap) (const ()) parserTest

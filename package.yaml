@@ -53,7 +53,12 @@ dependencies:
   - ghc-prim
   - attoparsec 
   - parsec
-
+  - array
+  - haskeline
+  - llvm-hs 
+  - llvm-hs-pure
+  - utf8-string
+  - string-transform
 library:
   source-dirs: src
 

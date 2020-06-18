@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Cobra.Parser (runParser) where
+module Cobra.Parser (runParser, printerT) where
 
 import Cobra.Types
 import Control.Monad.Identity (Identity)
@@ -41,6 +41,8 @@ runParser xs = case parse (whiteSpace >> programParser) "" xs of
 ss :: Monad m => ParsecT s u m a -> ParsecT s u m (a, SourceSpan)
 ss p = (\start e end -> (e, SS start end)) <$> getPosition <*> p <*> getPosition
 
+ss2 p = (\start e end -> e $ SS start end) <$> getPosition <*> p <*> getPosition
+
 var :: ParsecT String u Identity ExprU
 var = uncurry Var <$> ss identifier
 
@@ -62,9 +64,23 @@ term = mychainl1 logic op
   where
     op = PrimOp Mul <$ reservedOp "*" <|> PrimOp Add <$ reservedOp "/"
 
-logic = mychainl1 factor op
+logic = mychainl1 index op
   where
     op = PrimOp And <$ reservedOp "&&" <|> PrimOp Or <$ reservedOp "||"
+
+index = do
+  start <- getPosition
+  r <- factor
+  process start r
+  where
+    process start a = rest <|> return a
+      where
+        rest = do
+          reservedOp "["
+          b <- factor
+          reservedOp "]"
+          end <- getPosition
+          process start (Index a b (SS start end))
 
 mychainl1 p op = do
   start <- getPosition
@@ -80,7 +96,7 @@ mychainl1 p op = do
 
           process start (f a b (SS start end))
 
-factor = parens exprParser <|> try app <|> num <|> var <|> bool
+factor = try tuple <|> parens exprParser <|> try app <|> num <|> var <|> bool
 
 app = do
   start <- getPosition
@@ -88,6 +104,8 @@ app = do
   args <- parens $ sepBy exprParser (reservedOp ",")
   end <- getPosition
   return $ App name args (SS start end)
+
+tuple = ss2 $ fmap Tuple $ parens $ (:) <$> exprParser <*> many1 (reservedOp "," *> exprParser)
 
 lethelper = (,) <$> (identifier <* reservedOp "=") <*> exprParser
 
@@ -155,12 +173,12 @@ integer = Token.integer lexer
 
 whiteSpace = Token.whiteSpace lexer
 
-printer = do
+printerT = do
   s <- readFile "programs/cobra.boran"
   case runParser s of
     (Right r) -> putStrLn (show (fmap (const ()) r))
     (Left e) -> print e
 
--- >>> printer
--- Program {pFuns = [Decl {dName = "boran", dArgs = ["a","b"], dBody = PrimOp + (Var "a" ()) (Var "b" ()) (), dLabel = ()},Decl {dName = "duygus", dArgs = ["a","b"], dBody = PrimOp * (Var "a" ()) (Var "b" ()) (), dLabel = ()}], pbody = Let "x" (PrimOp * (PrimOp * (Num 2 ()) (Num 12 ()) ()) (Let "a" (PrimOp * (Num 2 ()) (Num 2 ()) ()) (PrimOp * (If (PrimOp < (Var "a" ()) (Num 3 ()) ()) (Var "a" ()) (Num 1 ()) ()) (Num 3 ()) ()) ()) ()) (PrimOp + (PrimOp + (Num 2 ()) (Var "x" ()) ()) (App "boran" [App "duygus" [Num 3 (),Num 4 ()] (),Num 4 ()] ()) ()) ()}
+-- >>> printerT
+-- Program {pFuns = [], pbody = Let "y" (Tuple [Num 111 (),Num 123 ()] ()) (Index (Var "y" ()) (Num 1 ()) ()) ()}
 --

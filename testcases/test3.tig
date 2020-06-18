@@ -1,0 +1,8 @@
+/* a record type and a record variable */
+let
+	type  rectype = {name:string, age:int}
+	var rec:rectype := rectype {name="Nobody", age=1000}
+in
+	rec.name := "Somebody";
+	rec
+end

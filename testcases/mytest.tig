@@ -1,0 +1,8 @@
+let
+
+function fact(a: int, b: int):int=
+		fact(a * b, b - 1)
+
+in
+	fact(1, 5)
+end

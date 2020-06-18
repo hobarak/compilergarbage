@@ -7,6 +7,18 @@ mkVar :: Show a => a -> String
 mkVar i = "x" ++ show i
 
 imm :: Int -> Expr a -> (Int, ([(String, Expr a)], Expr a))
+imm i ap@(Tuple args a) = g $ mapAccumL f (i, []) args
+  where
+    f (i, lets) expr = ((newi, lets ++ newlets), newexp)
+      where
+        (newi, (newlets, newexp)) = imm i expr
+    g ((i, lets), exprs) = (i + 1, (lets ++ [(mkVar (i + 1), Tuple exprs a)], Var (mkVar (i + 1)) a))
+    
+imm i p@(Index l r a) = (i2 + 1, (letl ++ letr ++ [(name, Index vl vr a)], Var name a))
+  where
+    (i1, (letl, vl)) = imm i l
+    (i2, (letr, vr)) = imm i1 r
+    name = mkVar (i2 + 1)
 imm i ap@(App name args a) = g $ mapAccumL f (i, []) args
   where
     f (i, lets) expr = ((newi, lets ++ newlets), newexp)
@@ -38,6 +50,16 @@ mklet [] expr = expr
 mklet ((var, value) : xs) expr = Let var value (mklet xs expr) undefined
 
 anf :: Int -> Expr a -> (Int, Expr a)
+anf i index@(Index l r a) = (i2, mklet (letl ++ letr) (Index vl vr a))
+  where
+    (i1, (letl, vl)) = imm i l
+    (i2, (letr, vr)) = imm i1 r
+anf i tuple@(Tuple xs a) = g $ mapAccumL f (i, []) xs
+  where
+    f (i, lets) expr = ((newi, lets ++ newlets), newexp)
+      where
+        (newi, (newlets, newexp)) = imm i expr
+    g ((i, lets), exprs) = (i, mklet lets (Tuple exprs a))
 anf i ap@(App name args a) = g $ mapAccumL f (i, []) args
   where
     f (i, lets) expr = ((newi, lets ++ newlets), newexp)

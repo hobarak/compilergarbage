@@ -1,0 +1,279 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module Exercises.TypeChecker where
+
+-- import Control.Monad (foldM, forM, join, zipWithM)
+-- import qualified Data.List as L
+-- import qualified Data.Map as M
+-- import qualified Exercises.AST as A
+-- import Exercises.AST hiding (Ty (..))
+-- import Prelude hiding (lookup)
+-- import Maybes (fromMaybe)
+--
+-- type Symtab a = M.Map Symbol a
+--
+-- empty :: Symtab a
+-- empty = M.empty
+--
+-- insert :: Symbol -> a -> Symtab a -> Symtab a
+-- insert = M.insert
+--
+-- inserts :: Foldable t => t (Symbol, a) -> Symtab a -> Symtab a
+-- inserts = flip (foldr (uncurry M.insert))
+--
+-- lookup :: Symbol -> Symtab a -> Maybe a
+-- lookup = M.lookup
+--
+-- fromList :: [(Symbol, a)] -> Symtab a
+-- fromList = M.fromList
+--
+-- -- declered before usage
+-- -- type checking
+-- -- not already declared / unique in the scope
+-- -- constructor exisits / new operator has a constructor /  have a method named
+-- -- function return types - argument types - number of arguments
+-- -- carry type information from declaration to usage
+--
+-- type Unique = Int
+--
+-- data Ty
+--   = NilTy
+--   | UnitTy
+--   | IntTy
+--   | StringTy
+--   | NameTy Symbol Symbol
+--   | RecordTy [(Symbol, Ty)] Unique
+--   | ArrayTy Ty Unique
+--   deriving (Show, Eq)
+--
+-- data TyC = NameTyC | RecordTyC | ArrayTyC
+--   deriving (Eq)
+--
+-- instance Show TyC where
+--   show NameTyC = "Name"
+--   show RecordTyC = "Record"
+--   show ArrayTyC = "Array"
+--
+-- data EnvEntry
+--   = VarEntry
+--       { ty :: Ty
+--       }
+--   | FunEntry
+--       { formals :: [Ty],
+--         result :: Ty
+--       }
+--
+-- venv0 :: Symtab EnvEntry
+-- venv0 =
+--   M.fromList
+--     [ ("print", FunEntry [StringTy] UnitTy),
+--       ("flush", FunEntry [] UnitTy),
+--       ("getchar", FunEntry [] StringTy),
+--       ("ord", FunEntry [StringTy] IntTy),
+--       ("chr", FunEntry [IntTy] StringTy),
+--       ("size", FunEntry [StringTy] IntTy),
+--       ("substring", FunEntry [StringTy, IntTy, IntTy] IntTy),
+--       ("concat", FunEntry [StringTy, StringTy] StringTy),
+--       ("not", FunEntry [IntTy] IntTy),
+--       ("exit", FunEntry [IntTy] UnitTy)
+--     ]
+--
+-- tenv0 :: Symtab Ty
+-- tenv0 =
+--   M.fromList
+--     [ ("int", IntTy),
+--       ("string", StringTy),
+--       ("unit", UnitTy),
+--       ("nil", NilTy)
+--     ]
+--
+-- type VarEnv = Symtab EnvEntry
+--
+-- type TyEnv = Symtab Ty
+--
+-- getTy :: (Ann f) => f (Ty, a) -> Ty
+-- getTy = fst . A.ann
+--
+-- nonfatal = undefined
+--
+-- fatal = undefined
+--
+-- checkTy :: (Monad m) => (Ty, a) -> Ty -> m ()
+-- checkTy (actual, ss) declared
+--   | actual == declared = pure ()
+--   | otherwise = fatal ss (TypeMismatch actual declared)
+--
+-- checkOp :: Monad f => Op -> Ty -> Ty -> a -> f Ty
+-- checkOp op tl tr a
+--   | tl /= tr = fatal a (TypeMismatch tl tr)
+--   | isArith = checks IntTy [tl, tr]
+--   | isComp = checks IntTy [tl, tr]
+--   | isEq = error "boran"
+--   | otherwise = error "boran"
+--   where
+--     checks expect = (expect <$) . traverse (\x -> checkTy (x, a) expect)
+--     isArith = op `elem` [Plus, Minus, Times, Divide]
+--     isComp = op `elem` [Lt, Le, Gt, Ge]
+--     isEq = op `elem` [Eq, Neq]
+--
+-- data SemantError
+--   = NamedTypeMismatch (Symbol) (Either TyC Ty) Ty
+--   | TypeMismatch Ty Ty
+--   | TypeUndefined Symbol
+--   | ArityError Symbol Int Int
+--   | NoHOF
+--   | UndefinedFunction Symbol
+--   | UnboundVariable Symbol
+--   | RepeatedDefinition Symbol
+--   | NoSuchField Symbol Symbol Ty
+--   | BreakOutsideLoop
+--
+-- transVar :: (Monad m) => VarEnv -> TyEnv -> Var a -> m (Var (Ty, a))
+-- transVar venv tenv = \case
+--   SimpleVar varName a ->
+--     case lookup varName venv of
+--       Just VarEntry {ty} -> return $ SimpleVar varName (ty, a)
+--       Just FunEntry {} -> nonfatal a NoHOF
+--       Nothing -> nonfatal a (UnboundVariable varName)
+--   FieldVar recVar fieldName a ->
+--     do
+--       recVar' <- transVar venv tenv recVar
+--       case getTy recVar' of
+--         RecordTy fields _ ->
+--           case L.lookup fieldName fields of
+--             Just fieldTy -> return $ FieldVar recVar' fieldName (fieldTy, a)
+--             Nothing -> nonfatal a (NoSuchField fieldName undefined (getTy recVar'))
+--         otherTy -> fatal a (NamedTypeMismatch undefined (Left RecordTyC) otherTy)
+--   SubsVar arrVar indexExp a ->
+--     do
+--       arrVar' <- transVar venv tenv arrVar
+--       case getTy arrVar' of
+--         ArrayTy elemTy _ ->
+--           do
+--             indexExp' <- transExp venv tenv indexExp
+--             checkTy (A.ann indexExp') elemTy
+--             return $ SubsVar arrVar' indexExp' (elemTy, a)
+--         otherTy -> fatal a (NamedTypeMismatch undefined (Left ArrayTyC) otherTy)
+--
+-- transExp :: forall m a. (Monad m) => VarEnv -> TyEnv -> Expr a -> m (Expr (Ty, a))
+-- transExp venv tenv = go
+--   where
+--     goCheck expr expected = do
+--       expr' <- go expr
+--       checkTy (ann expr') expected
+--       return expr'
+--     go :: Expr a -> m (Expr (Ty, a))
+--     go (Nil ann) = return $ Nil (NilTy, ann)
+--     go (Num i ann) = return $ Num i (IntTy, ann)
+--     go (Str s ann) = return $ Str s (StringTy, ann)
+--     go (Var var a) = do
+--       var' <- transVar venv tenv var
+--       return $ Var var' (getTy var', a)
+--     go (If cond e1 e2 a) = do
+--       c <- goCheck cond IntTy
+--       case e2 of
+--         Nothing -> goCheck e1 UnitTy >>= (\e1' -> return $ If c e1' Nothing (UnitTy, a))
+--         (Just e2') -> do
+--           e1' <- go e1
+--           e2'' <- goCheck e2' (getTy e1')
+--           return $ If c e1' (Just e2'') (getTy e1', a)
+--     go (Seq xs a) = do
+--       xs' <- mapM go xs
+--       return $ Seq xs' (getTy (last xs'), a)
+--     go (Call sym args a) = do
+--       case lookup sym venv of
+--         (Just (FunEntry params r)) ->
+--           let nargs = length args
+--               nparams = length params
+--            in if nargs /= nparams
+--                 then fatal undefined (ArityError sym nargs nparams)
+--                 else do
+--                   args' <- sequence $ zipWith goCheck args params
+--                   return $ Call sym args' (r, a)
+--         _ -> fatal undefined (UndefinedFunction sym)
+--     go (Op l o r ann) = do
+--       l' <- go l
+--       r' <- go r
+--       to <- checkOp o (getTy l') (getTy r') ann
+--       return $ Op l' o r' (to, ann)
+--     go (While c b a) = do
+--       c' <- goCheck c IntTy
+--       b' <- go b
+--       checkTy (ann b') UnitTy
+--       return $ While c' b' (UnitTy, a)
+--     go (For i lo hi b a) = do
+--       lo' <- goCheck lo IntTy
+--       hi' <- goCheck hi IntTy
+--       b' <- transExp (insert i (VarEntry IntTy) venv) tenv b
+--       checkTy (ann b') UnitTy
+--       return $ For i lo' hi' b' (UnitTy, a)
+--     go (Assign v e a) = do
+--       v' <- transVar venv tenv v
+--       e' <- go e
+--       let vTy = getTy v'
+--       --when (vTy /= NilTy) $
+--       --  checkTy (ann v') (getTy e')
+--       return $ Assign v' e' (UnitTy, a)
+--     go _ = undefined
+--
+-- -- transDec:: VarEnv -> TyEnv -> Decl a -> (VarEnv, TyEnv)
+-- -- transTy::  VarEnv -> TyEnv -> Decl a -> (VarEnv, TyEnv)
+-- transDec ::
+--   (Monad m) =>
+--   VarEnv ->
+--   TyEnv ->
+--   Decl a ->
+--   m (VarEnv, TyEnv)
+-- transDec venv tenv dec = case dec of
+--   FunDecl fs a ->
+--     let doFun venv tenv (Function name params returnTy body a) = do
+--           formals <- forM params $ \(Field name ty a) -> pure (name, VarEntry (fromMaybe undefined $ lookup ty tenv))
+--           let retTy = fromMaybe UnitTy ((flip lookup tenv . fst) =<< returnTy)
+--           let (formalTys :: [Ty]) = map (ty . snd) formals
+--           let funTy = FunEntry formalTys retTy
+--           let venv' = inserts ((name, funTy) : formals) venv
+--           body' <- transExp venv' tenv body
+--           --checkTy (ann body') retTy
+--           return (venv', tenv)
+--      in foldM (uncurry doFun) (venv, tenv) fs
+--   VarDecl name typ init meta -> do
+--     init' <- transExp venv tenv init
+--     let initTy = getTy init'
+--     let declaredTy = (flip lookup tenv . fst) =<< typ
+--     varTy <- case declaredTy of
+--       Nothing -> pure initTy
+--       Just ty -> do checkTy (ann init') ty; pure ty
+--     let venv' = insert name (VarEntry varTy) venv
+--     return (venv', tenv)
+--   TypeDecl [(s, ast_t, _)] a ->
+--     do
+--       ty <- transTy tenv ast_t
+--       let tenv' = insert s ty tenv
+--       return (venv, tenv')
+--   _ -> undefined
+--
+-- transTy :: TyEnv -> A.Ty a -> m Ty
+-- transTy tenv = \case
+--   A.NameTy symb _
+--     | symb == "nil" -> return NilTy
+--     | symb == "unit" -> return UnitTy
+--     | symb == "int" -> return IntTy
+--     | symb == "string" -> return StringTy
+--     | otherwise -> undefined
+--   A.RecordTy fields _ ->
+--     do
+--       flds <-
+--         traverse
+--           ( \Field {..} ->
+--               sequence (fieldName, lookupT tenv fieldType fieldAnnot)
+--           )
+--           fields
+--       uniq <- gensym
+--       return $ RecordTy flds uniq
+--   A.ArrayTy symb _ ->
+--     Array <$> lookupT tenv symb <*> gensym

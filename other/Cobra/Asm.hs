@@ -5,7 +5,7 @@ module Cobra.Asm where
 import Data.Char (toLower)
 import Text.Printf (printf)
 
-data Reg = EAX | EBX | EBP | ESP deriving (Show)
+data Reg = EAX | EBX | EBP | ESP | ESI deriving (Show)
 
 data Arg = Reg Reg | Const Integer | RegOffset Reg Int | Hex Int deriving (Show)
 
@@ -46,7 +46,7 @@ instance ASM Label where
   asm (DeclImpl s) = s ++ "_impl"
 
 instance ASM Instruction where
-  asm (IMov a b) = "mov " ++ asm a ++ ", " ++ asm b
+  asm (IMov a b) = "mov dword " ++ asm a ++ ", " ++ asm b
   asm (IAdd a b) = "add " ++ asm a ++ ", " ++ asm b
   asm (IMul a b) = "imul  " ++ asm a ++ ", " ++ asm b
   asm (ISub a b) = "sub " ++ asm a ++ ", " ++ asm b
@@ -80,7 +80,8 @@ header =
       "extern error",
       "extern print",
       "global our_code_label",
-      "our_code_label:"
+      "our_code_label:",
+      "mov dword esi, [esp + 4] "
     ]
 
 footer = unlines ["label_error:", "push eax", "push 0", "call error"]

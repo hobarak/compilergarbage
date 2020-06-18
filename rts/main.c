@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include   <stdlib.h>
 
-extern int our_code_label() asm("our_code_label");
+extern int our_code_label(int* heap) asm("our_code_label");
 extern void error(int code, int v) asm("error");
 
 #define MyTrue  0x80000001
@@ -17,21 +17,33 @@ int print (int value){
     printf("True");
   }
   else if(value == MyFalse){
-    printf("False");
+    printf("bool : False");
 
   }
   else if ((value & 0x00000001) == 0) {
-      printf("print from c %d\n", value >> 1);
+      printf("int %d\n", value >> 1);
+  }
+  else if ((value & 0x0000007) == 7) {
+    int* ptr = value & 0xFFFFFFF8;
+    printf("tuple\n");
+    int size = *ptr;
+    for(int i=1; i <= size; i++) {
+        print(*(ptr + i));
+    }
+   
+
   }
   else {
     printf("unknown vlaue");
   }
   return value;
 }
-
 int main (){
-  int result =  our_code_label();
+  int* HEAP = calloc(1000, sizeof (int));
+  int result =  our_code_label(HEAP);
   print(  result);
+  printf("%d\n", *(HEAP+4));
+  printf("%p\n", HEAP);
   return 0;
 }
  

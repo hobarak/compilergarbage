@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 426bcbc3b320448ff105983e7a3dc525e37df3e89367f0d170acc09b7ddbf15c
+-- hash: 285f39d4f17689b54610d9dc68cca5279e6a29d902e1070e0a62d71faad974f3
 
 name:           compiler
 version:        0.1.0.0
@@ -27,17 +27,21 @@ source-repository head
 
 library
   exposed-modules:
-      Adder.Compiler
-      Adder.Parser
-      Boa.Compiler
-      Boa.Parser
-      Boa.Printer
-      Cobra.Anf
-      Cobra.Asm
-      Cobra.Compiler
-      Cobra.Parser
-      Cobra.Printer
-      Cobra.Types
+      Cs231
+      Csep505.One
+      Exercises.AST
+      Exercises.Chapter1
+      Exercises.Chapter3
+      Exercises.Frame
+      Exercises.Lexer
+      Exercises.Lexer
+      Exercises.Parser
+      Exercises.Parser
+      Exercises.TypeChecker
+      Kaleidoscope.AST
+      Kaleidoscope.Codegen
+      Kaleidoscope.One
+      Kaleidoscope.Runner
       Lib
   other-modules:
       Paths_compiler
@@ -45,6 +49,7 @@ library
       src
   build-depends:
       aeson
+    , array
     , async
     , attoparsec
     , base >=4.7 && <5
@@ -58,7 +63,10 @@ library
     , filepath
     , ghc
     , ghc-prim
+    , haskeline
     , lens ==4.19.2
+    , llvm-hs
+    , llvm-hs-pure
     , monad-par
     , mtl
     , network
@@ -67,6 +75,7 @@ library
     , random
     , regex-posix
     , stm
+    , string-transform
     , text
     , time
     , transformers
@@ -84,6 +93,7 @@ executable compiler-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -O3 -Wincomplete-patterns
   build-depends:
       aeson
+    , array
     , async
     , attoparsec
     , base >=4.7 && <5
@@ -98,7 +108,10 @@ executable compiler-exe
     , filepath
     , ghc
     , ghc-prim
+    , haskeline
     , lens ==4.19.2
+    , llvm-hs
+    , llvm-hs-pure
     , monad-par
     , mtl
     , network
@@ -107,6 +120,7 @@ executable compiler-exe
     , random
     , regex-posix
     , stm
+    , string-transform
     , text
     , time
     , transformers
@@ -125,6 +139,7 @@ test-suite compiler-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , array
     , async
     , attoparsec
     , base >=4.7 && <5
@@ -139,7 +154,10 @@ test-suite compiler-test
     , filepath
     , ghc
     , ghc-prim
+    , haskeline
     , lens ==4.19.2
+    , llvm-hs
+    , llvm-hs-pure
     , monad-par
     , mtl
     , network
@@ -148,6 +166,7 @@ test-suite compiler-test
     , random
     , regex-posix
     , stm
+    , string-transform
     , text
     , time
     , transformers
